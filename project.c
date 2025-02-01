@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,8 +20,15 @@ typedef struct {
 
 typedef struct {
     location loc;
-
+    int health;//adad salamati bein 0 ta 100
+    int weapons[4];//list selah haii ke dare
+    int foods;//tedad ghaza hash
+    int score;
+    int color;//0 = red | 1 = blue | 2 = green
+    int magics[4];
 }character_information;
+
+//character_information characinf;
 
 typedef struct {
     int length;
@@ -52,7 +57,7 @@ void game_setting();
 void game_difficulty();
 void character_color();
 void print_map();
-void print_character();
+//void print_character(int random_room,struct roominf[9]);
 int g_m=0;//game difficulty
 int c_c=0;//characte color   0=red   1=blue   2=green
 
@@ -730,12 +735,20 @@ struct weapon{
 
 struct weapon weaponinf[4];
 
+struct food{
+    int x;
+    int y;
+};
+
+struct food foodinf[5];
+
 void print_map() {
     clear();
     start_color();
     init_pair(14, COLOR_YELLOW, COLOR_BLACK);
     srand(time(0));
 
+    character_information characinf;
     int n_r = (rand() % 1) + 9; // تعداد اتاق‌ها (۶ تا ۱۰)
     int grid_size = 3; 
     int cell_width = 35;
@@ -1163,6 +1176,223 @@ void print_map() {
         }
     }
     attroff(COLOR_PAIR(34) | A_BOLD);
+    //chap ghaza dar otagh haye: yek swe panj haft nooh
+    foodinf[0].x = roominf[yek].x_n_w + 1;
+    foodinf[0].y = roominf[yek].y_n_w + 1;
+    foodinf[1].x = roominf[swe].x_n_w + 1;
+    foodinf[1].y = roominf[swe].y_n_w + 1;
+    foodinf[2].x = roominf[panj].x_n_w + 1;
+    foodinf[2].y = roominf[panj].y_n_w + 1;
+    foodinf[3].x = roominf[haft].x_n_w + 1;
+    foodinf[3].y = roominf[haft].y_n_w + 1;
+    foodinf[4].x = roominf[nooh].x_n_w + 1;
+    foodinf[4].y = roominf[nooh].y_n_w + 1;
+    init_pair(99,COLOR_GREEN,COLOR_BLACK);
+    attron(COLOR_PAIR(99) | A_ITALIC | A_BOLD);
+    for(int i=0;i<5;i++){
+        mvprintw(foodinf[i].y,foodinf[i].x,"$");
+    }
+    attroff(COLOR_PAIR(99) | A_ITALIC | A_BOLD);
+    //print character 
+    // tabe joda nasakhtam chon bug mikhordm
+    int kodom_otagh;//dar otaghe ganj nabashad
+    int ty=0;
+    while(ty == 0){
+        kodom_otagh = rand()%9;
+        if(kodom_otagh == random_room){
+            ty = 0;
+        }else{
+            ty = 1;
+        }
+    }
+    characinf.loc.x = roominf[kodom_otagh].x_s_e - 1;
+    characinf.loc.y = roominf[kodom_otagh].y_n_w + 1;
+    int prev_x = characinf.loc.x;
+    int prev_y = characinf.loc.y;
+    int kodoom=0; // 0 = .       1 = #    2 = =
+    init_pair(432,COLOR_BLUE,COLOR_BLACK);
+    int weapon_num = 0;//tedad selah haii ke dare
+    int magic_num = 0;
+    characinf.health = 100;
+    characinf.score = 0;
+    while (1) {
+        curs_set(0);
+        start_color();
+        if(kodoom == 0){
+            attron(A_BOLD | COLOR_PAIR(15));
+            mvprintw(prev_y, prev_x, ".");
+            attroff(A_BOLD | COLOR_PAIR(15));
+        }else if(kodoom == 1){
+            mvprintw(prev_y, prev_x, "#");
+        }else{
+            mvprintw(prev_y, prev_x, "=");
+        }
+        refresh();
+        mvprintw(characinf.loc.y, characinf.loc.x, "@");
+        refresh();
+        prev_x = characinf.loc.x;
+        prev_y = characinf.loc.y;
+        int choice = getch(); 
+        switch (choice) {
+            case KEY_UP:
+                characinf.loc.y--;
+                break;
+            case KEY_DOWN:
+                characinf.loc.y++;
+                break;
+            case KEY_RIGHT:
+                characinf.loc.x++;
+                break;
+            case KEY_LEFT:
+                characinf.loc.x--;
+                break;
+            case 'q':
+                return;
+        }
+        mvprintw(33,103,"                               ");
+        int in_bounds = 0;
+
+        for (int i = 0; i < 9; i++) {
+            if (characinf.loc.x > roominf[i].x_n_w && characinf.loc.x < roominf[i].x_s_e &&
+                characinf.loc.y > roominf[i].y_n_w && characinf.loc.y < roominf[i].y_s_e) {
+                in_bounds = 1;
+                break;
+            }
+        }
+
+        for (int corrn = 0; corrn < 11; corrn++) {
+            if (coorrinf[corrn].x_e != -1) {
+                if (coorrinf[corrn].x_e == coorrinf[corrn].x_s) {
+                    if (characinf.loc.x >= coorrinf[corrn].x_s && characinf.loc.x <= coorrinf[corrn].x_e &&
+                        characinf.loc.y >= (coorrinf[corrn].y_s - 1) && characinf.loc.y <= (coorrinf[corrn].y_e + 1)) {
+                        in_bounds = 1;
+                        break;
+                    }
+                } else {
+                    if (characinf.loc.x >= (coorrinf[corrn].x_s - 1) && characinf.loc.x <= (coorrinf[corrn].x_e + 1) &&
+                        characinf.loc.y >= coorrinf[corrn].y_s && characinf.loc.y <= coorrinf[corrn].y_e) {
+                        in_bounds = 1;
+                        break;
+                    }
+                }
+            }
+        }
+        kodoom = 0;
+        for (int corrn = 0; corrn < 11; corrn++) {
+            if (coorrinf[corrn].x_e != -1) {
+                if (coorrinf[corrn].y_e == coorrinf[corrn].y_s) {
+                    if((prev_x == coorrinf[corrn].x_s - 1  || prev_x == coorrinf[corrn].x_e + 1) && prev_y == coorrinf[corrn].y_s){
+                        kodoom = 2;
+                    }else if(prev_y == coorrinf[corrn].y_s && prev_x >= coorrinf[corrn].x_s && prev_x <= coorrinf[corrn].x_e ){
+                        kodoom = 1;
+                    }
+                } else {//x hashon barabar
+                    if((prev_y == coorrinf[corrn].y_s - 1  || prev_y == coorrinf[corrn].y_e + 1) && prev_x == coorrinf[corrn].x_s){
+                        kodoom = 2;
+                    }else if(prev_x == coorrinf[corrn].x_s && prev_y >= coorrinf[corrn].y_s && prev_y <= coorrinf[corrn].y_e){
+                        kodoom = 1;
+                    }
+                }
+            }
+        }
+
+        if (!in_bounds) {
+            characinf.loc.x = prev_x;
+            characinf.loc.y = prev_y;
+        }
+        //ro tale ha ast ya na?
+        for(int i=0;i<1000;i++){
+            if(trapinf[i].x == characinf.loc.x && trapinf[i].y == characinf.loc.y){
+                characinf.health = characinf.health - 5;
+                //COLOR_RED  19
+                attron(COLOR_PAIR(19));
+                mvprintw(33,103,"!!YOU WENT ON THE TRAP!!");
+                mvprintw(characinf.loc.y,characinf.loc.x,"@");
+                attroff(COLOR_PAIR(19));
+                trapinf[i].x = -1;
+                trapinf[i].y = -1;
+                break;
+            }
+        }
+        //ro ghaza ha ast ya na?
+        for(int i=0;i<5;i++){
+            if(foodinf[i].x == characinf.loc.x && foodinf[i].y == characinf.loc.y){
+                characinf.foods ++;
+                mvprintw(33,107,"!!YOU GOT FOOD!!");
+                foodinf[i].x = -1;
+                foodinf[i].y = -1;
+            }
+        }
+        //sela ha        
+        for(int i=0;i<4;i++){
+            if(weaponinf[i].x == characinf.loc.x && weaponinf[i].y == characinf.loc.y){
+                characinf.weapons[weapon_num] = weaponinf[i].weapon_type;
+                weapon_num ++;
+                mvprintw(33,107,"!!WEAPON ADDED!!");
+                weaponinf[i].x = -1;
+                weaponinf[i].y = -1;
+            }
+        }
+        //telesm ha
+        for(int i=0;i<4;i++){
+            if(magicinf[i].x == characinf.loc.x && weaponinf[i].y == characinf.loc.y){
+                characinf.magics[magic_num] = magicinf[i].magic_type;
+                magic_num ++;
+                magicinf[i].x = -1;
+                magicinf[i].y = -1;
+            }
+        }
+        //chap safheye etela'at dar samte CHAP safhe
+        ///////////////////////////////////////////   chap           ////////////////////////////////
+        ///////////////////////////////////////////   chap           ////////////////////////////////
+        attron(A_BOLD | COLOR_PAIR(19));
+        for(int i=92;i<141;i++){
+            mvprintw(0,i,".");
+            //mvprintw(0,i,".");
+            //mvprintw(35,i,".");
+            mvprintw(35,i,".");
+        }
+        for(int i=1;i<36;i++){
+            //mvprintw(i,92,".");
+            mvprintw(i,92,".");
+            //mvprintw(i,140,".");
+            mvprintw(i,140,".");
+        }
+        attroff(COLOR_PAIR(19));
+        user_information user;
+        mvprintw(1,93,"Your score : %d",characinf.score);
+        int heal = characinf.health;
+        mvprintw(3,93,"Your health : %d",heal);
+        mvprintw(5,93,"Number of your foods: %d",characinf.foods);
+        //list aslahe ha
+        int x2 = 93,y2 =8;
+        move(y2,x2);
+        mvprintw(7,110,"Your weapons list :");
+        move(7,113);
+        for(int i=0;i<weapon_num;i++){
+            if(weaponinf[i].weapon_type == 1){
+                mvprintw(y2,x2,"GORZ ");
+                x2+=7;
+            }else if(weaponinf[i].weapon_type == 2){
+                mvprintw(y2,x2,"KHANJAR ");
+                x2+=10;
+            }else if(weaponinf[i].weapon_type == 3){
+                mvprintw(y2,x2,"ASAYE JADOII ");
+                x2+=15;
+            }else if(weaponinf[i].weapon_type == 4){
+                mvprintw(y2,x2,"TIRE A'DI ");
+                x2+=12;
+            }else{
+                mvprintw(y2,x2,"SHAMSHIR ");
+                x2+=10;
+            }
+        }
+        attroff(A_BOLD);
+
+    }
+
+
+
 
 
 
@@ -1170,6 +1400,8 @@ void print_map() {
     getch();
     clear();
 }
+
+
 
 
 // void print_character(int n_wx, int n_wy, int floor_length, int floor_width) {
