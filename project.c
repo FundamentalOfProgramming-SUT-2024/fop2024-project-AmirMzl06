@@ -41,6 +41,11 @@ typedef struct {
     location door[4];
 }floor_informatoin;
 
+struct snake{
+    location loc;
+    int health;
+};
+struct snake snakeinf;
 
 // Function prototypes
 void print_menu(int highlight);
@@ -1044,7 +1049,7 @@ void print_map() {
     int tool = roominf[random_room].x_s_e - roominf[random_room].x_n_w - 2;
     int arz = roominf[random_room].y_s_e - roominf[random_room].y_n_w - 2;
     int trap_num = (rand() % (tool * arz) );
-    trap_num = trap_num % 8 ;
+    trap_num = (trap_num % 8) + 1;
     int trapii = trap_num ;
     for(int i=0;i<trap_num;i++){
         int xrandd = (rand() % (tool-1));
@@ -1073,6 +1078,7 @@ void print_map() {
     int nun = 0;
     int tol = roominf[random_room_magic].x_s_e - roominf[random_room_magic].x_n_w ;
     int aarz = roominf[random_room_magic].y_s_e - roominf[random_room_magic].y_n_w;
+    int harekat = 0;
     while(nun != 4){
         int tt = (rand() % (tol - 2)) + 1;
         int aa = (rand() % (aarz - 2)) + 1;
@@ -1142,7 +1148,11 @@ void print_map() {
     int weloc[4];
     int nuwe = 0;
     while(nuwe != 4) {
+        h:
         int map_s = (rand() % 9);
+        if(map_s == random_room){
+            goto h;
+        }
         int find = 0;
         for(int i = 0; i < 4; i++) {
             if(weloc[i] == map_s) {
@@ -1217,9 +1227,25 @@ void print_map() {
     characinf.health = 100;
     characinf.score = 0;
     characinf.weapon_typ = 0;
+    snakeinf.loc.x = roominf[random_room].x_n_w + 1;
+    snakeinf.loc.y = roominf[random_room].y_n_w + 1;
+    int prevsx = snakeinf.loc.x;
+    int prevsy = snakeinf.loc.y;
+    int is_trap = 0;
     while (1) {
         curs_set(0);
         start_color();
+        if(harekat == 1){
+            if(is_trap==1){
+                attron(COLOR_PAIR(19));
+                mvprintw(prevsy, prevsx, "^");
+                attroff(COLOR_PAIR(19));
+            }else{
+                attron(A_BOLD | COLOR_PAIR(15));
+                mvprintw(prevsy, prevsx, ".");
+                attroff(A_BOLD | COLOR_PAIR(15));
+            }      
+        }
         if(kodoom == 0){
             attron(A_BOLD | COLOR_PAIR(15));
             mvprintw(prev_y, prev_x, ".");
@@ -1418,48 +1444,110 @@ void print_map() {
             characinf.foods--;
         }
         here:
-        //ebtekhab selah 
-        mvprintw(9,93,"Press c to chose weapon");
-        if(choice == 'c'){
-            onja:
-            mvprintw(9,93,"Selcet the weapon number from the specified list");
-            int choice2;
-            scanf("%d",&choice2);
-            if(choice2 > (weapon_num + 1)){
-                mvprintw(10,93,"Please select correct number");
-                goto onja;
-            }
-            if(choice2 == 1){
-                characinf.weapon_typ = characinf.weapons[0];
-            }else if(choice2 == 2){
-                characinf.weapon_typ = characinf.weapons[1];
-            }else if(choice2 == 3){
-                characinf.weapon_typ = characinf.weapons[2];
-            }else if(choice2 == 4){
-                characinf.weapon_typ = characinf.weapons[3];
-            }else{
-                mvprintw(10,93,"Please select correct number");
-                goto onja;
+        // ebtekhab selah 
+        // mvprintw(9, 93, "Press c to choose weapon");
+        // if (choice == 'c') {
+        //     int choice2;
+        //     while (1) {
+        //         mvprintw(9, 93, "Select the weapon from the list above");
+        //         refresh();
+
+        //         choice2 = getch() - '0';
+        //         if(weapon_num == 0){
+        //             mvprintw(12,93,"You don't have a weapon");
+        //             continue;
+        //         }
+
+        //         if (choice2 < 1 || choice2 > 5 || choice2 >(weapon_num+1)) {
+        //             mvprintw(12, 93, "Please select a correct number");
+        //             continue;
+        //         }
+        //         characinf.weapon_typ = characinf.weapons[choice2-1];
+        //         break;
+        //     }
+        // }
+        // if (characinf.weapon_typ == 0) {
+        //     mvprintw(14, 93, "You do not have a weapon in your hand right now");
+        // } else {
+        //     switch (characinf.weapon_typ) {
+        //         case 1:
+        //             mvprintw(14, 93, "Your weapon: GORZ");
+        //             break;
+        //         case 2:
+        //             mvprintw(14, 93, "Your weapon: KHANJAR");
+        //             break;
+        //         case 3:
+        //             mvprintw(14, 93, "Your weapon: ASAYE JADOII");
+        //             break;
+        //         case 4:
+        //             mvprintw(14, 93, "Your weapon: TIRE A'DI");
+        //             break;
+        //         case 5:
+        //             mvprintw(14, 93, "Your weapon: SHAMSHIR");
+        //             break;
+        //         default:
+        //             mvprintw(14, 93, "Unknown weapon type!");
+        //             break;
+        //     }
+        // }
+        /* chap  maar*/
+        attron(COLOR_PAIR(99) | A_ITALIC);
+        prevsx = snakeinf.loc.x;
+        prevsy = snakeinf.loc.y;
+        is_trap = 0;
+        for(int i=0;i<trap_num;i++){
+            if((prevsx == trapinf[i].x) && (prevsy == trapinf[i].y)){
+                is_trap = 1;
             }
         }
-        if(characinf.weapon_typ==0){
-            mvprintw(12,93,"You do not have a weapon in your hand right now!");
-        }else{
-            if (characinf.weapon_typ == 1){
-                mvprintw(12,93,"You weapon : GORZ");
-            }else if(characinf.weapon_typ == 2){
-                mvprintw(12,93,"You weapon : KHANJAR");
-            }else if (characinf.weapon_typ == 3){
-                mvprintw(12,93,"You weapon : ASAYE JADOII");
-            }else if(characinf.weapon_typ == 4){
-                mvprintw(12,93,"You weapon : TIRE A'DI");
-            }else{
-                mvprintw(12,93,"You weapon : SHAMSHIR");
+        if((characinf.loc.x >roominf[random_room].x_n_w && characinf.loc.x <roominf[random_room].x_s_e) && (characinf.loc.y >roominf[random_room].y_n_w && characinf.loc.y <roominf[random_room].y_s_e)){
+            if(snakeinf.loc.x > characinf.loc.x){
+                snakeinf.loc.x --;
+            }else
+            if(snakeinf.loc.y < characinf.loc.y){
+                snakeinf.loc.y ++;
+            }else
+            if(snakeinf.loc.y > characinf.loc.y){
+                snakeinf.loc.y --;
+            }else
+            if(snakeinf.loc.x < characinf.loc.x){
+                snakeinf.loc.x ++;
             }
-            
+            harekat = 1;
+        }else{
+            harekat = 0;
+        }
+        if((snakeinf.loc.x == characinf.loc.x) && (snakeinf.loc.y == characinf.loc.y)){
+            characinf.health -= 50;
+            attron(COLOR_PAIR(19) | A_BOLD);
+            mvprintw(33,103,"!!YOU HIT A SNAKE!!");
+            attroff(COLOR_PAIR(19) | A_BOLD);
+            snakeinf.loc.x = 1100000;
+            snakeinf.loc.y = 1100000;
+        }else{
+            mvprintw(snakeinf.loc.y,snakeinf.loc.x,"O");
+        }
+        attroff(COLOR_PAIR(99) | A_ITALIC);
+        if(characinf.health <= 0){
+            clear();
+            //print FAILURE
+            attron(A_BOLD | COLOR_PAIR(19));
+            for(int i=52;i<80;i++){
+                mvprintw(8,i,"X");
+                mvprintw(14,i,"X");
+            }
+            for(int i=8;i<15;i++){
+                mvprintw(i,52,"X");
+                mvprintw(i,79,"X");
+            }
+            mvprintw(11,62,"FAILURE");
+            attroff(A_BOLD | COLOR_PAIR(19));
+            mvprintw(20,61,"you lose");
+            refresh();
+            getch();
+            return;
         }
         
-
     }
 
 
