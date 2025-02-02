@@ -26,6 +26,7 @@ typedef struct {
     int score;
     int color;//0 = red | 1 = blue | 2 = green
     int magics[4];
+    int weapon_typ;
 }character_information;
 
 //character_information characinf;
@@ -1215,6 +1216,7 @@ void print_map() {
     int magic_num = 0;
     characinf.health = 100;
     characinf.score = 0;
+    characinf.weapon_typ = 0;
     while (1) {
         curs_set(0);
         start_color();
@@ -1232,26 +1234,37 @@ void print_map() {
         refresh();
         prev_x = characinf.loc.x;
         prev_y = characinf.loc.y;
-        int choice = getch(); 
-        switch (choice) {
-            case KEY_UP:
-                characinf.loc.y--;
-                break;
-            case KEY_DOWN:
-                characinf.loc.y++;
-                break;
-            case KEY_RIGHT:
-                characinf.loc.x++;
-                break;
-            case KEY_LEFT:
-                characinf.loc.x--;
-                break;
-            case 'q':
-                return;
+        char choice;
+        scanf(" %c", &choice); // Vared kardan-e yek character
+        // switch (choice) {
+        //     case KEY_UP:
+        //         characinf.loc.y--;
+        //         break;
+        //     case KEY_DOWN:
+        //         characinf.loc.y++;
+        //         break;
+        //     case KEY_RIGHT:
+        //         characinf.loc.x++;
+        //         break;
+        //     case KEY_LEFT:
+        //         characinf.loc.x--;
+        //         break;
+        //     case 'q':
+        //         return;
+        // }
+        if (choice == 'w') { // Baraye KEY_UP
+            characinf.loc.y--;
+        } else if (choice == 's') { // Baraye KEY_DOWN
+            characinf.loc.y++;
+        } else if (choice == 'd') { // Baraye KEY_RIGHT
+            characinf.loc.x++;
+        } else if (choice == 'a') { // Baraye KEY_LEFT
+            characinf.loc.x--;
+        } else if (choice == 'q') {
+            return;
         }
         mvprintw(33,103,"                               ");
         int in_bounds = 0;
-
         for (int i = 0; i < 9; i++) {
             if (characinf.loc.x > roominf[i].x_n_w && characinf.loc.x < roominf[i].x_s_e &&
                 characinf.loc.y > roominf[i].y_n_w && characinf.loc.y < roominf[i].y_s_e) {
@@ -1307,7 +1320,7 @@ void print_map() {
                 //COLOR_RED  19
                 attron(COLOR_PAIR(19));
                 mvprintw(33,103,"!!YOU WENT ON THE TRAP!!");
-                mvprintw(characinf.loc.y,characinf.loc.x,"@");
+                mvprintw(prev_y,prev_x,"@");
                 attroff(COLOR_PAIR(19));
                 trapinf[i].x = -1;
                 trapinf[i].y = -1;
@@ -1363,7 +1376,7 @@ void print_map() {
         mvprintw(1,93,"Your score : %d",characinf.score);
         int heal = characinf.health;
         mvprintw(3,93,"Your health : %d",heal);
-        mvprintw(5,93,"Number of your foods: %d",characinf.foods);
+        mvprintw(5,93,"Number of your foods: %d (Press e to use food)",characinf.foods);
         //list aslahe ha
         int x2 = 93,y2 =8;
         move(y2,x2);
@@ -1388,11 +1401,66 @@ void print_map() {
             }
         }
         attroff(A_BOLD);
+        //estefade az ghaza
+        if (choice == 101) { // barabre e bod;
+            if (characinf.foods == 0) {
+                mvprintw(33, 107, "!!YOU HAVE NO FOOD TO EAT!!");
+                refresh(); // Refresh safhe
+                goto here;
+            }
+            if (characinf.health == 100) {
+                mvprintw(33, 109, "!!YOUR HEALTH IS FULL!!");
+                refresh(); // Refresh safhe
+                goto here;
+            }
+            mvprintw(33, 106, "!!YOU ATE ONE OF THE FOODS!!");
+            characinf.health += 5;
+            characinf.foods--;
+        }
+        here:
+        //ebtekhab selah 
+        mvprintw(9,93,"Press c to chose weapon");
+        if(choice == 'c'){
+            onja:
+            mvprintw(9,93,"Selcet the weapon number from the specified list");
+            int choice2;
+            scanf("%d",&choice2);
+            if(choice2 > (weapon_num + 1)){
+                mvprintw(10,93,"Please select correct number");
+                goto onja;
+            }
+            if(choice2 == 1){
+                characinf.weapon_typ = characinf.weapons[0];
+            }else if(choice2 == 2){
+                characinf.weapon_typ = characinf.weapons[1];
+            }else if(choice2 == 3){
+                characinf.weapon_typ = characinf.weapons[2];
+            }else if(choice2 == 4){
+                characinf.weapon_typ = characinf.weapons[3];
+            }else{
+                mvprintw(10,93,"Please select correct number");
+                goto onja;
+            }
+        }
+        if(characinf.weapon_typ==0){
+            mvprintw(12,93,"You do not have a weapon in your hand right now!");
+        }else{
+            if (characinf.weapon_typ == 1){
+                mvprintw(12,93,"You weapon : GORZ");
+            }else if(characinf.weapon_typ == 2){
+                mvprintw(12,93,"You weapon : KHANJAR");
+            }else if (characinf.weapon_typ == 3){
+                mvprintw(12,93,"You weapon : ASAYE JADOII");
+            }else if(characinf.weapon_typ == 4){
+                mvprintw(12,93,"You weapon : TIRE A'DI");
+            }else{
+                mvprintw(12,93,"You weapon : SHAMSHIR");
+            }
+            
+        }
+        
 
     }
-
-
-
 
 
 
