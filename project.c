@@ -1323,6 +1323,12 @@ void print_map() {
     int prevxas;
     int prevyas;
     arrowinf.side = -1;
+    characinf.magics[0] = -1;
+    characinf.magics[1] = -1;
+    characinf.magics[2] = -1;
+    characinf.magics[3] = -1;
+    int speed = 0;
+    int hhhr;
     while (1) {
         hh:
         curs_set(0);
@@ -1430,14 +1436,45 @@ void print_map() {
         //     case 'q':
         //         return;
         // }
+        // if(speed){
+        //     if (choice == 'w') { // Baraye KEY_UP
+        //         characinf.loc.y--;
+        //     } else if (choice == 's') { // Baraye KEY_DOWN
+        //         characinf.loc.y++;
+        //     } else if (choice == 'd') { // Baraye KEY_RIGHT
+        //         characinf.loc.x++;
+        //     } else if (choice == 'a') { // Baraye KEY_LEFT
+        //         characinf.loc.x--;    
+        //     }
+        // }
         if (choice == 'w') { // Baraye KEY_UP
-            characinf.loc.y--;
+            if(speed){
+                characinf.loc.y-=2;
+                hhhr ++;    
+            }else{
+                characinf.loc.y--;
+            }
         } else if (choice == 's') { // Baraye KEY_DOWN
-            characinf.loc.y++;
+            if(speed){
+                characinf.loc.y+=2;
+                hhhr ++;    
+            }else{
+                characinf.loc.y++;
+            }
         } else if (choice == 'd') { // Baraye KEY_RIGHT
-            characinf.loc.x++;
+            if(speed){
+                characinf.loc.x+=2;
+                hhhr ++;    
+            }else{
+                characinf.loc.x++;
+            }
         } else if (choice == 'a') { // Baraye KEY_LEFT
-            characinf.loc.x--;
+            if(speed){
+                characinf.loc.x-=2;
+                hhhr ++;    
+            }else{
+                characinf.loc.x--;
+            }
         } else if (choice == 'q') {
             for(int i=93;i<140;i++){
                 for(int j=1;j<35;j++){
@@ -1658,7 +1695,7 @@ void print_map() {
         }
         //telesm ha
         for(int i=0;i<4;i++){
-            if(magicinf[i].x == characinf.loc.x && weaponinf[i].y == characinf.loc.y){
+            if(magicinf[i].x == characinf.loc.x && magicinf[i].y == characinf.loc.y){
                 characinf.magics[magic_num] = magicinf[i].magic_type;
                 magic_num ++;
                 magicinf[i].x = -1;
@@ -1849,9 +1886,9 @@ void print_map() {
                 mvprintw(i,52,"X");
                 mvprintw(i,79,"X");
             }
-            mvprintw(11,62,"FAILURE");
+            mvprintw(11,62,"DEAD");
             attroff(A_BOLD | COLOR_PAIR(19));
-            mvprintw(20,61,"you lose");
+            mvprintw(20,61,"you died");
             refresh();
             getch();
             return;
@@ -1929,6 +1966,40 @@ void print_map() {
                     arrowinf.loc.y = 1111;
                 }
             }
+            if(snakeinf.loc.y == prevsy){
+                if(arrowinf.side == 2 || arrowinf.side == 4){
+                    if(arrowinf.loc.x - snakeinf.loc.x == 1 || arrowinf.loc.x - snakeinf.loc.x == -1){
+                        attron(A_BOLD | COLOR_PAIR(15));
+                        mvprintw(arrowinf.loc.y, arrowinf.loc.x, ".");
+                        mvprintw(snakeinf.loc.y,snakeinf.loc.y, ".");
+                        attroff(A_BOLD | COLOR_PAIR(15));
+                        mvprintw(33, 103, "!!YOU KILL SNAKE!!");
+                        characinf.score +=100;
+                        arrowinf.loc.x = 1111;
+                        arrowinf.loc.y = 1111;
+                        snakeinf.loc.x = 1111;
+                        snakeinf.loc.y = 1111;
+                        
+                    }
+                }
+            }
+            if(snakeinf.loc.x == prevsx){
+                if(arrowinf.side == 1 || arrowinf.side == 3){
+                    if(arrowinf.loc.y - snakeinf.loc.y == 1 || arrowinf.loc.y - snakeinf.loc.y == -1){
+                        attron(A_BOLD | COLOR_PAIR(15));
+                        mvprintw(arrowinf.loc.y, arrowinf.loc.x, ".");
+                        mvprintw(snakeinf.loc.y,snakeinf.loc.y, ".");
+                        attroff(A_BOLD | COLOR_PAIR(15));
+                        mvprintw(33, 103, "!!YOU KILL SNAKE!!");
+                        characinf.score +=100;
+                        arrowinf.loc.x = 1111;
+                        arrowinf.loc.y = 1111;
+                        snakeinf.loc.x = 1111;
+                        snakeinf.loc.y = 1111;
+                        
+                    }
+                }
+            }
             if(arrowinf.loc.x == snakeinf.loc.x && arrowinf.loc.y == snakeinf.loc.y){
                 prevxas = arrowinf.loc.x;
                 prevyas = arrowinf.loc.y;
@@ -1941,8 +2012,27 @@ void print_map() {
             }
             mvprintw(arrowinf.loc.y, arrowinf.loc.x, ".");
         }
-
-        
+        //sehr ha
+        for(int i=0;i<4;i++){
+            if(characinf.magics[i]!=-1){
+                if(characinf.magics[i] == 1){
+                    characinf.health = 100;
+                }
+                if(characinf.magics[i] == 3){
+                    characinf.health -= 50;
+                }
+                if(characinf.magics[i] == 2){
+                    speed = 1;
+                    hhhr = 0;
+                }
+                characinf.magics[i] = -1;
+                goto oot;
+            }
+        }
+        oot:
+        if(hhhr == 10){
+            speed = 0;
+        }
 
         
     }
