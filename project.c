@@ -277,7 +277,7 @@ void new_user(user_information *user) {
     attroff(COLOR_PAIR(8) | A_BLINK);
     mvprintw(12, 0, "Press Enter to go to Main Menu.");
     
-    // Save user info to file
+    // save kardan etela'at
     FILE *file = fopen("inf.txt", "a");
     if (file != NULL) {
         fprintf(file, "%s %s %s %d\n", user->name, user->password, user->email, user->score);
@@ -472,11 +472,59 @@ void profile(user_information *user) {
 }
 
 void scoreboard() {
-    mvprintw(0, 0, "Scoreboard - Press any key to return...");
-    refresh();
-    getch();
-    clear();
+    FILE *file = fopen("inf.txt", "r");
+    if (file != NULL) {
+        char file_name[100], file_password[100], file_email[100];
+        int file_score;
+        typedef struct {
+            char name[100];
+            char email[100];
+            int score;
+        } ScoreboardEntry;
+
+        ScoreboardEntry entries[100];
+        int count = 0;
+
+        // khondane karbar 
+        while (fscanf(file, "%s %s %s %d", file_name, file_password, file_email, &file_score) != EOF) {
+            strcpy(entries[count].name, file_name);
+            strcpy(entries[count].email, file_email);
+            entries[count].score = file_score;
+            count++;
+        }
+        fclose(file);
+
+        //sort kardan karbara bar asase emtiaz
+        for (int i = 0; i < count - 1; i++) {
+            for (int j = 0; j < count - i - 1; j++) {
+                if (entries[j].score < entries[j + 1].score) {
+                    ScoreboardEntry temp = entries[j];
+                    entries[j] = entries[j + 1];
+                    entries[j + 1] = temp;
+                }
+            }
+        }
+
+        // chap e scoreboard
+        clear();
+        mvprintw(0, 0, "Scoreboard:");
+        for (int i = 0; i < count; i++) {
+            mvprintw(i + 2, 0, "%d. %s - %d", i + 1, entries[i].name, entries[i].score);
+        }
+        refresh();
+        getch();
+        clear();
+    } else {
+        attron(A_BOLD);
+        mvprintw(0, 0, "No users registered.");
+        attroff(A_BOLD);
+        refresh();
+        getch();
+        clear();
+    }
 }
+
+
 
 void game_setting() {
     clear();
@@ -747,6 +795,21 @@ struct food{
 };
 
 struct food foodinf[5];
+
+struct treasure{
+    location loc;
+};
+
+struct treasure treasureinf[7];
+struct treasure roomtr[3];
+
+struct arrow{
+    location loc;
+    int n_arrow;
+    int side;//1:up   2:right   3:down    4:left
+};
+
+struct arrow arrowinf;
 
 void print_map() {
     clear();
@@ -1232,9 +1295,55 @@ void print_map() {
     int prevsx = snakeinf.loc.x;
     int prevsy = snakeinf.loc.y;
     int is_trap = 0;
+    //chap ganj ha
+    //7 ta ganj darim va dar otaghe sehr ganj nadarim
+    //dar otaghe ganj 3 ta ganj darim va dar baghie otaggh ha 1 done dar har otagh
+    //otagh maamoli//
+    int tr_num = 0;
+    for(int i=0;i<7;i++){
+        oo:
+        int random_r = (rand()%9);
+        while (random_r == random_room || random_r == random_room_magic){
+            goto oo;
+        }
+        int toul = (roominf[random_r].x_s_e - roominf[random_r].x_n_w);
+        int awrz = (roominf[random_r].y_s_e - roominf[random_r].y_n_w);
+        treasureinf[tr_num].loc.x = roominf[random_r].x_n_w +(rand()%(toul-2) +1);
+        treasureinf[tr_num].loc.y = roominf[random_r].y_n_w +(rand()%(awrz-2) +1);
+        //COLOR_YELLOW 34 
+        attron(COLOR_PAIR(34) | A_BOLD);
+        mvprintw(treasureinf[tr_num].loc.y,treasureinf[tr_num].loc.x,"0");
+        tr_num ++;
+    }
+    init_pair(79,COLOR_BLACK,COLOR_RED);
+    int bargasht = 0;
+    arrowinf.n_arrow = 10;
+    int prevxa;
+    int prevya;
+    int prevxas;
+    int prevyas;
+    arrowinf.side = -1;
     while (1) {
+        hh:
         curs_set(0);
         start_color();
+        int trpp=0;
+        for(int i=0;i<trap_num;i++){
+            if(trapinf->x == prevxa && trapinf->y == prevya){
+                trpp = 1;
+                break;
+            }
+        }
+        if(trpp){
+            attron(COLOR_PAIR(19));
+            mvprintw(prevya, prevxa, "^");
+            attroff(COLOR_PAIR(19));
+        }else{
+            attron(A_BOLD | COLOR_PAIR(15));
+            mvprintw(prevya, prevxa, ".");
+            attroff(A_BOLD | COLOR_PAIR(15));
+        }
+
         if(harekat == 1){
             if(is_trap==1){
                 attron(COLOR_PAIR(19));
@@ -1246,6 +1355,47 @@ void print_map() {
                 attroff(A_BOLD | COLOR_PAIR(15));
             }      
         }
+        if(arrowinf.loc.x == 1111 &&arrowinf.loc.y == 1111){
+            attron(A_BOLD | COLOR_PAIR(15));
+            mvprintw(prevyas, prevxas, ".");
+            attroff(A_BOLD | COLOR_PAIR(15));
+
+        }
+        if(bargasht == 0){
+            int is_trap=0;
+            for(int i=0;i<trap_num;i++){
+                if(trapinf[i].x == (roominf[random_room].x_n_w +2) && trapinf[i].y == (roominf[random_room].y_n_w +1)){
+                    is_trap = 1;
+                }
+                if(is_trap){
+                    attron(COLOR_PAIR(19));
+                    mvprintw(roominf[random_room].y_n_w +1,roominf[random_room].x_n_w +2,"^");
+                    attroff(COLOR_PAIR(19));
+                }else{
+                    attron(A_BOLD | COLOR_PAIR(15));
+                    mvprintw(roominf[random_room].y_n_w +1,roominf[random_room].x_n_w +2, ".");
+                    attroff(A_BOLD | COLOR_PAIR(15));         
+                }
+
+            }
+            int is_trap2=0;
+            for(int i=0;i<trap_num;i++){
+                if(trapinf[i].x == (roominf[random_room].x_n_w +1) && trapinf[i].y == (roominf[random_room].y_n_w +2)){
+                    is_trap2 = 1;
+                }
+                if(is_trap2){
+                    attron(COLOR_PAIR(19));
+                    mvprintw(roominf[random_room].y_n_w +2,roominf[random_room].x_n_w +1,"^");
+                    attroff(COLOR_PAIR(19));
+                }else{
+                    attron(A_BOLD | COLOR_PAIR(15));
+                    mvprintw(roominf[random_room].y_n_w +2,roominf[random_room].x_n_w +1, ".");
+                    attroff(A_BOLD | COLOR_PAIR(15));         
+                }
+
+            }
+                    
+        }
         if(kodoom == 0){
             attron(A_BOLD | COLOR_PAIR(15));
             mvprintw(prev_y, prev_x, ".");
@@ -1256,6 +1406,8 @@ void print_map() {
             mvprintw(prev_y, prev_x, "=");
         }
         refresh();
+        mvprintw(15,113,"            ");
+        mvprintw(25,114,"      ");
         mvprintw(characinf.loc.y, characinf.loc.x, "@");
         refresh();
         prev_x = characinf.loc.x;
@@ -1287,8 +1439,127 @@ void print_map() {
         } else if (choice == 'a') { // Baraye KEY_LEFT
             characinf.loc.x--;
         } else if (choice == 'q') {
-            return;
+            for(int i=93;i<140;i++){
+                for(int j=1;j<35;j++){
+                    mvprintw(j,i," ");
+                }
+            }
+            attron(A_BOLD);
+            mvprintw(1,111,"GAME OPTION");
+            attroff(A_BOLD);
+            int highlitt = 0;
+            while(1){
+                if(highlitt == 0){
+                    attron(COLOR_PAIR(79) | A_BOLD);
+                    mvprintw(15,113,"RESUME");
+                    attroff(COLOR_PAIR(79) | A_BOLD);
+                    attron(COLOR_PAIR(19) | A_BOLD);
+                    mvprintw(25,114,"EXIT");
+                    attroff(COLOR_PAIR(19) | A_BOLD);
+                }else{
+                    attron(COLOR_PAIR(19) | A_BOLD);
+                    mvprintw(15,113,"RESUME");
+                    attroff(COLOR_PAIR(19) | A_BOLD);
+                    attron(COLOR_PAIR(79) | A_BOLD);
+                    mvprintw(25,114,"EXIT");
+                    attroff(COLOR_PAIR(79) | A_BOLD);
+                }
+                refresh();
+                int choicce = getch();
+                if(choicce == KEY_UP){
+                    if(highlitt == 1){
+                        highlitt = 0;
+                    }else{
+                        highlitt = 1;
+                    }
+                }else if(choicce == KEY_DOWN){
+                    if(highlitt == 0){
+                        highlitt = 1;
+                    }else{
+                        highlitt = 0;
+                    }
+                }else if(choicce == 10){
+                    if(highlitt == 0){
+                        //refresh();
+                        goto hh;
+                    }else{
+                        return;
+                    }
+                }
+            }
         }
+            // WINDOW *sub_win = derwin(stdscr, 6, 30, 2, 5);
+            // box(sub_win, 0, 0);
+            // mvwprintw(sub_win, 1, 1, "Sub Window");
+            // wrefresh(sub_win);
+            // getch();
+            // werase(sub_win);
+            // delwin(sub_win);
+            // refresh();
+            // goto niif;
+
+
+            // //panjare 20 dar 30
+            // for(int i=2;i<36;i++){
+            //     for(int j=19;j<72;j++){
+            //         mvprintw(i,j," ");
+            //     }
+            // }
+            // for(int i=3;i<34;i++){
+            //     mvprintw(i,20,"|");
+            //     mvprintw(i,69,"|");
+            //     mvprintw(i,18,"|");
+            //     mvprintw(i,71,"|");
+            // }
+            // for(int i=20;i<70;i++){
+            //     mvprintw(3,i,"-");
+            //     mvprintw(34,i,"-");
+            //     mvprintw(2,i,"-");
+            //     mvprintw(35,i,"-");
+            // }
+            // int highlitt = 0;
+            // while(1){
+            //     if(highlitt == 0){
+            //         attron(COLOR_PAIR(79) | A_BOLD);
+            //         mvprintw(15,30,"RESUME");
+            //         attroff(COLOR_PAIR(79) | A_BOLD);
+            //         attron(COLOR_PAIR(19) | A_BOLD);
+            //         mvprintw(25,30,"EXIT");
+            //         attroff(COLOR_PAIR(19) | A_BOLD);
+            //     }else{
+            //         attron(COLOR_PAIR(19) | A_BOLD);
+            //         mvprintw(15,30,"RESUME");
+            //         attroff(COLOR_PAIR(19) | A_BOLD);
+            //         attron(COLOR_PAIR(79) | A_BOLD);
+            //         mvprintw(25,30,"EXIT");
+            //         attroff(COLOR_PAIR(79) | A_BOLD);
+            //     }
+            //     refresh();
+            //     int choicce = getch();
+            //     if(choicce == KEY_UP){
+            //         if(highlitt == 1){
+            //             highlitt = 0;
+            //         }else{
+            //             highlitt = 1;
+            //         }
+            //     }else if(choicce == KEY_DOWN){
+            //         if(highlitt == 0){
+            //             highlitt = 1;
+            //         }else{
+            //             highlitt = 0;
+            //         }
+            //     }else if(choicce == 10){
+            //         if(highlitt == 0){
+            //             clear();
+            //             refresh();
+            //             goto hh;
+            //         }else{
+            //             return;
+            //         }
+            //     }
+            // }
+        // mvprintw(15,113,"            ");
+        // mvprintw(25,114,"      ");
         mvprintw(33,103,"                               ");
         int in_bounds = 0;
         for (int i = 0; i < 9; i++) {
@@ -1339,6 +1610,19 @@ void print_map() {
             characinf.loc.x = prev_x;
             characinf.loc.y = prev_y;
         }
+        
+        //ro ganj ast ya na?
+        for(int i=0;i<7;i++){
+            if(characinf.loc.x == treasureinf[i].loc.x && characinf.loc.y == treasureinf[i].loc.y ){
+                characinf.score += 50;
+                treasureinf[i].loc.x = -1;
+                treasureinf[i].loc.y = -1;
+                mvprintw(33,103,"!!YOU GOT TREASURE!!");
+                break;
+            }
+
+        }
+
         //ro tale ha ast ya na?
         for(int i=0;i<1000;i++){
             if(trapinf[i].x == characinf.loc.x && trapinf[i].y == characinf.loc.y){
@@ -1514,7 +1798,20 @@ void print_map() {
                 snakeinf.loc.x ++;
             }
             harekat = 1;
+            bargasht ++;
         }else{
+            //harekat = 0;
+            harekat = 1;
+            if(snakeinf.loc.y > (roominf[random_room].y_n_w+1)){
+                snakeinf.loc.y --;
+                bargasht --;
+            }else
+            if(snakeinf.loc.x > (roominf[random_room].x_n_w +1)){
+                snakeinf.loc.x --;
+                bargasht --;
+            }
+        }
+        if(snakeinf.loc.x == (roominf[random_room].x_n_w+1) && snakeinf.loc.y == (roominf[random_room].y_n_w+1)){
             harekat = 0;
         }
         if((snakeinf.loc.x == characinf.loc.x) && (snakeinf.loc.y == characinf.loc.y)){
@@ -1527,6 +1824,18 @@ void print_map() {
         }else{
             mvprintw(snakeinf.loc.y,snakeinf.loc.x,"O");
         }
+        // if(snakeinf.loc.x !=(roominf[random_room].x_n_w+1) &&snakeinf.loc.x !=(roominf[random_room].x_n_w+2) &&snakeinf.loc.y !=(roominf[random_room].y_n_w+1) &&snakeinf.loc.y !=(roominf[random_room].y_n_w+2)){
+        //     attron(A_BOLD | COLOR_PAIR(15));
+        //     mvprintw(roominf[random_room].y_n_w+1, roominf[random_room].x_n_w+2, ".");
+        //     mvprintw(roominf[random_room].y_n_w+2, roominf[random_room].x_n_w+1, ".");
+        //     attroff(A_BOLD | COLOR_PAIR(15));
+        // }
+        // if(1){
+        //     attron(A_BOLD | COLOR_PAIR(15));
+        //     mvprintw(roominf[random_room].y_n_w+2,roominf[random_room].x_n_w+1,".");
+        //     mvprintw(roominf[random_room].y_n_w+1,roominf[random_room].x_n_w+2,".");
+        //     attroff(A_BOLD | COLOR_PAIR(15));
+        // }
         attroff(COLOR_PAIR(99) | A_ITALIC);
         if(characinf.health <= 0){
             clear();
@@ -1547,6 +1856,94 @@ void print_map() {
             getch();
             return;
         }
+        // Tir zadan
+        int tir_h = 0;
+        for(int i=0; i < weapon_num; i++){
+            if(characinf.weapons[i] == 4){
+                tir_h = 1;
+            }
+        }
+        if(tir_h){
+            arrowinf.n_arrow = 10;
+            if(choice == 'y'){ // tir be samte bala mire
+                arrowinf.side = 1;
+                arrowinf.loc.x = characinf.loc.x;
+                arrowinf.loc.y = characinf.loc.y;
+            } else if(choice == 'j'){ // tir be samte rast mire
+                arrowinf.side = 2;
+                arrowinf.loc.x = characinf.loc.x;
+                arrowinf.loc.y = characinf.loc.y;
+            } else if(choice == 'h'){ // tir be samte pain mire
+                arrowinf.side = 3;
+                arrowinf.loc.x = characinf.loc.x;
+                arrowinf.loc.y = characinf.loc.y;
+            } else if(choice == 'g'){ // tir be samte chap mire
+                arrowinf.side = 4;
+                arrowinf.loc.x = characinf.loc.x;
+                arrowinf.loc.y = characinf.loc.y;
+            }
+        } else {
+            if(choice == 'y' || choice == 'j' || choice == 'h' || choice == 'g'){
+                mvprintw(33, 103, "!!YOU DONT HAVE ARROW!!");
+            }
+        }
+        int chr_room;
+        for(int i=0; i < 9; i++){
+            if((characinf.loc.x > roominf[i].x_n_w && characinf.loc.y > roominf[i].y_n_w) && 
+            (characinf.loc.x < roominf[i].x_s_e && characinf.loc.y < roominf[i].y_s_e)){
+                chr_room = i;
+                break;
+            }
+        }
+        // arrowinf.loc.x = characinf.loc.x;
+        // arrowinf.loc.y = characinf.loc.y;
+        prevxa = arrowinf.loc.x;
+        prevya = arrowinf.loc.y;
+        if(arrowinf.side != -1){
+            if(arrowinf.side == 1){
+                if(arrowinf.loc.y > (roominf[chr_room].y_n_w+1)){
+                    arrowinf.loc.y--;
+                } else {
+                    arrowinf.loc.x = 1111;
+                    arrowinf.loc.y = 1111;
+                }
+            } else if(arrowinf.side == 2){
+                if(arrowinf.loc.x < (roominf[chr_room].x_s_e-1)){
+                    arrowinf.loc.x++;
+                } else {
+                    arrowinf.loc.x = 1111;
+                    arrowinf.loc.y = 1111;
+                }
+            } else if(arrowinf.side == 3){
+                if(arrowinf.loc.y < (roominf[chr_room].y_s_e-1)){
+                    arrowinf.loc.y++;
+                } else {
+                    arrowinf.loc.x = 1111;
+                    arrowinf.loc.y = 1111;
+                }
+            } else if(arrowinf.side == 4){
+                if(arrowinf.loc.x > (roominf[chr_room].x_n_w+1)){
+                    arrowinf.loc.x--;
+                } else {
+                    arrowinf.loc.x = 1111;
+                    arrowinf.loc.y = 1111;
+                }
+            }
+            if(arrowinf.loc.x == snakeinf.loc.x && arrowinf.loc.y == snakeinf.loc.y){
+                prevxas = arrowinf.loc.x;
+                prevyas = arrowinf.loc.y;
+                arrowinf.loc.x = 1111;
+                arrowinf.loc.y = 1111;
+                snakeinf.loc.x = 1111;
+                snakeinf.loc.y = 1111;
+                mvprintw(33, 103, "!!YOU KILL SNAKE!!");
+                characinf.score +=100;
+            }
+            mvprintw(arrowinf.loc.y, arrowinf.loc.x, ".");
+        }
+
+        
+
         
     }
 
